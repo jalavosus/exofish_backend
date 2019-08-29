@@ -85,10 +85,10 @@ func LoadTemplate(formData map[string]string) (string, string) {
 	var serviceDirection, origin string
 	switch formData["direction"] {
 	case "uptown":
-		serviceDirection = "Beren to Wilf Campus Shuttle"
+		serviceDirection = "Beren to Wilf Campus"
 		origin = "Beren"
 	case "downtown":
-		serviceDirection = "Wilf to Beren Campus Shuttle"
+		serviceDirection = "Wilf to Beren Campus"
 		origin = "Wilf"
 	}
 
