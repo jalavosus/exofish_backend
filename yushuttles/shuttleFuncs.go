@@ -1,4 +1,4 @@
-package main
+package yushuttles
 
 import (
 	"fmt"
@@ -14,6 +14,11 @@ const (
 	smtpPort   int    = 465
 )
 
+/**
+ * Sends the fake shuttle reservation email.
+ * I'd like to thank Amazon WorkMail for making programmatic
+ * email access real easy.
+ */
 func SendMail(recipientName, recipientEmail string, htmlBody, textBody string) {
 	m := gomail.NewMessage()
 

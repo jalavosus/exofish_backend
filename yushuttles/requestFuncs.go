@@ -1,7 +1,6 @@
-package main
+package yushuttles
 
 import (
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -15,6 +14,9 @@ import (
 	"io/ioutil"
 )
 
+/**
+ * TimesList corresponds to a JSON object consisting of exactly one entry.
+ */
 type TimesList struct {
 	AvailableTimes []string `json:"available_times"`
 }
@@ -30,11 +32,12 @@ const (
 var (
 	RequestHeaders map[string]string
 	HTTPClient     *http.Client
-	FmtUser        string
 )
 
 func init() {
 	HTTPClient = &http.Client{}
+	// Shamelessly ganked from https://yushuttles.com,
+	// copied from the web requests made by the real site.
 	RequestHeaders = map[string]string{
 		"Accept":           "*/*",
 		"Host":             "yushuttles.com",
@@ -46,11 +49,17 @@ func init() {
 		"Content-Type":     "application/x-www-form-urlencoded",
 	}
 
+	// YU's wordpress backend uses an invalid TLS cert, so I have to tell http to ignore that.
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-
-	FmtUser = fmt.Sprintf("this is an unused import")
 }
 
+/**
+ * Builds the time list based on the given direction and desired date.
+ * Direction can be one of:
+ *   - 1: For when you want to go uptown
+ *	 - 2: For when you want to go downtown
+ * bookingDate should/will always be in the format YYYY-MM-DD (ISO format)
+ */
 func CreateTimelistForm(direction int, bookingDate string) map[string]string {
 
 	date, _ := time.Parse(ISODateFormat, bookingDate)
@@ -78,7 +87,7 @@ func CreateTimelistForm(direction int, bookingDate string) map[string]string {
 }
 
 /**
- * Docstring here
+ * Parent handler function for /shuttleTimes.
  */
 func GetShuttleTimes(direction int, bookingDate string) TimesList {
 	timeListForm := CreateTimelistForm(direction, bookingDate)
@@ -103,6 +112,7 @@ func GetShuttleTimes(direction int, bookingDate string) TimesList {
 	return tl
 }
 
+// Helper function, does the web-requesting.
 func doHTTPRequest(reqUrl string, params map[string]string) []byte {
 	formData := url.Values{}
 
@@ -129,6 +139,7 @@ func doHTTPRequest(reqUrl string, params map[string]string) []byte {
 	return response
 }
 
+// Helper function, reads an http response into a byte-array
 func loadResponse(response *http.Response) []byte {
 	defer response.Body.Close()
 
@@ -145,6 +156,8 @@ func loadResponse(response *http.Response) []byte {
 	return marshaledData
 }
 
+// Helper function, returns a map[string]string.
+// This matches the format of a JSON doc with no nested objects.
 func jsonify(jsonStr string) map[string]string {
 	jsonMap := make(map[string]string)
 
@@ -156,6 +169,7 @@ func jsonify(jsonStr string) map[string]string {
 	return jsonMap
 }
 
+// Helper function, decodes a base64-encoded string.
 func base64Decode(str string) (string, bool) {
 	str = strings.ReplaceAll(str, "\"", "")
 

@@ -1,4 +1,4 @@
-package main
+package yushuttles
 
 import (
 	"bytes"
@@ -20,14 +20,26 @@ const (
 	PreparseTimeFormat string = "3:04 PM"
 )
 
+/**
+ * Struct containing all data related to formatting/populating
+ * the email template which will eventually get sent to the user.
+ */
 type TemplateStruct struct {
-	Name             string
+	// Requester's name
+	Name string
+	// "Wilf to Beren" or "Beren to Wilf"
 	ServiceDirection string
-	Date             string
-	Time             string
-	Origin           string
+	// Surprisingly, in the format of MM/DD/YYYY
+	Date string
+	// In the format of HH:MM AM/PM
+	Time string
+	// Either "Wilf" or "Beren"
+	Origin string
 }
 
+/**
+ * Does some HTML tree traversal to find any available shuttles for a given date/direction.
+ */
 func GetAvailableTimes(response string) []string {
 	timesList := make([]string, 0)
 
@@ -36,9 +48,10 @@ func GetAvailableTimes(response string) []string {
 		log.Fatal(err)
 	}
 
-	// Find the review items
+	// Find the divider object(s) containing the <ul>s with shuttle info.
 	timesAvailable := doc.Find(".bup-time-slots-divisor ")
 
+	// First() will always be the requested date, which is all we need.
 	relevantDate := timesAvailable.First()
 
 	timeSlots := relevantDate.Find(".bup-time-slots-available-list ")
