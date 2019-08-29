@@ -6,12 +6,32 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 )
 
+func buildFormData(httpPostForm url.Values) map[string]string {
+	formData := make(map[string]string)
+
+	for k, v := range httpPostForm {
+		formData[k] = v[0]
+	}
+
+	return formData
+}
+
+func setHeaders(method string, writer *http.ResponseWriter) {
+	(*writer).Header().Set("Access-Control-Allow-Origin", "*")
+	switch method {
+	case "POST":
+		(*writer).Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	case "GET":
+		(*writer).Header().Set("Access-Control-Allow-Methods", "GET")
+	}
+}
+
 func getTimesHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	setHeaders("GET", &w)
 
 	direction, ok := r.URL.Query()["direction"]
 	if !ok {
@@ -34,25 +54,24 @@ func getTimesHandler(w http.ResponseWriter, r *http.Request) {
 	availableTimes := GetShuttleTimes(directionInt, bookingDate[0])
 
 	response := bytes.Buffer{}
-	_ = json.NewEncoder(&response).Encode(availableTimes)
+	err := json.NewEncoder(&response).Encode(availableTimes)
+	if err != nil {
+		log.Println(err)
+	}
 
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(response.Bytes())
 }
 
 func shuttlesHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	setHeaders("POST", &w)
+
 	err := r.ParseForm()
 	if err != nil {
 		log.Println(err)
 	}
 
-	formData := make(map[string]string)
-
-	for k, v := range r.PostForm {
-		formData[k] = v[0]
-	}
+	formData := buildFormData(r.PostForm)
 
 	htmlMessageBody, textMessageBody := LoadTemplate(formData)
 	SendMail(formData["name"], formData["email"], htmlMessageBody, textMessageBody)
